@@ -2,7 +2,8 @@ import Blog from "../models/blogModel.js";
 import Errorhandler from "../utils/errorhandler.js";
 
 export const createBlog = async (req, res, next) => {
-  console.log(req.body, "reqboyd");
+  req.body.userId = req.user._id;
+  req.body.createdBy = req.user.role;
   try {
     let result = await Blog.create(req.body);
 
@@ -17,7 +18,7 @@ export const createBlog = async (req, res, next) => {
 
 export const getAllBlogs = async (req, res, next) => {
   try {
-    let result = await Blog.find({});
+    let result = await Blog.find({isDeleted: false});
 
     res.status(200).json({
       success: true,
@@ -28,19 +29,67 @@ export const getAllBlogs = async (req, res, next) => {
   }
 };
 
-export const getSingleBlog = async(req, res, next)=>{
-    try {
-        let blogId = req.params.id;
-        let result = await Blog.findById(blogId);
+export const getSingleBlog = async (req, res, next) => {
+  try {
+    let blogId = req.params.id;
+    let result = await Blog.findOne({_id: blogId, isDeleted: false});
 
-        if(!result) return new Errorhandler("No Result found", 400)
+    if (!result) return next(new Errorhandler("No Result found", 400));
 
-        res.status(200).json({
-            success: true,
-            result
-        })
+    res.status(200).json({
+      success: true,
+      result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-    } catch (error) {
-        next(error);
-    }
-}
+export const updateBlog = async (req, res, next) => {
+  try {
+    const { findQuery, updateQuery } = req.body;
+
+    if (!findQuery || !updateQuery)
+      return next(new Errorhandler("Bad request", 400));
+
+    req.body.findQuery.userId = req.user._id;
+
+    let result = await Blog.findOneAndUpdate(findQuery, updateQuery, {
+      new: true,
+      upsert: false,
+    });
+
+    if (!result) return next(new Errorhandler("Not found"), 400);
+
+    res.status(200).json({
+      success: true,
+      result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteBlog = async (req, res, next) => {
+  try {
+    if (!req.body.findQuery) return next(new Errorhandler("No findQuery", 400));
+
+    req.body.findQuery.userId = req.user._id;
+
+    let result = await Blog.findOneAndUpdate(
+      req.body.findQuery,
+      { isDeleted: true },
+      { new: true, upsert: false }
+    );
+    console.log(result, "result");
+
+    if (!result) return next(new Errorhandler("Not Found", 400));
+
+    res.status(200).json({
+      success: true,
+      result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

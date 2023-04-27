@@ -3,7 +3,6 @@ import Errorhandler from "../utils/errorhandler.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-
 export const createUser = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
@@ -34,6 +33,10 @@ export const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return next(new Errorhandler("Enter both email and pass"), 400);
+    }
+
     const user = await User.findOne({ email: email }).select("+password");
 
     if (!user) return next(new Errorhandler("User dosent exist", 400));
@@ -63,21 +66,23 @@ export const loginUser = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-
 };
 
-export const logOut = async(req, res, next)=>{
-    res.cookie("token", null, {
-        expire: new Date(Date.now()),
-        httpOnly: true,
-    } );
+export const logOut = async (req, res, next) => {
+ try {
+  res.cookie("token", "", {
+    expire: new Date(Date.now()),
+    httpOnly: true,
+  });
 
-    res.status(200).json({
-        success: true,
-        message: "Logged Out successfully"
-    })
+  res.status(200).json({
+    success: true,
+    message: "Logged Out successfully",
+  });
+ } catch (error) {
+  next(error);
+ }
 };
-
 
 //1- confirm password not done
 //2- reset password not done
