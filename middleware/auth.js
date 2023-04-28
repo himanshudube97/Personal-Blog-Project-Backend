@@ -7,10 +7,14 @@ export const isAuthenticatedUser = async (req, res, next) => {
 
   if (!token) return next(new Errorhandler("invalid token", 400));
 
-  const decodedData = jwt.verify(token, process.env.JWT_SECRET_KEY);
+  const decodedData = jwt.verify(token, process.env.JWT_SECRET_KEY); //here decodedDAta contains the userinfo, jo humne payload main bheji thi.
 
   let user = await User.findById(decodedData.id, "name email role _id");
 
   req.user = user;
   next();
 };
+
+// here if we use req.user = decodedData then we can save the query on every request. 
+// we are not using the find query but it helps as as user if deleted can be checked on every request. 
+

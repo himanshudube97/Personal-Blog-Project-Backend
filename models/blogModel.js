@@ -8,7 +8,7 @@ const blogSchema = new mongoose.Schema({
     createdBy: {type:String},
     isDeleted: {type: Boolean, default: false},
     isSaved: {type: Boolean, default: false},
-    noOfLikes: {type:Number, default: 0},
+    likes: {type: Array, default: []},
     noOfShares: {type: Number, default: 0},
     noOfViews: {type: Number, default: 0},
     comments: [{
