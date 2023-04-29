@@ -2,6 +2,9 @@ import User from "../models/userModel.js";
 import Errorhandler from "../utils/errorhandler.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { sendEmail } from "../utils/forgetPassword.js";
+import Token from "../models/tokenModel.js";
+import crypto from "crypto";
 
 export const createUser = async (req, res, next) => {
   try {
@@ -122,9 +125,28 @@ export const changePassword = async (req, res, next) => {
   });
 };
 
-export const forgetPassword = async (req, res, next)=>{
-  
-}
+export const forgetPassword = async (req, res, next) => {
+  try {
+    const user = await User.findOne({ _id: req.user._id });
+    console.log(user, "user");
+    let token = await Token.findOne({ userId: user._id });
+    console.log(token, "token");
+    if (!token) {
+      token = await new Token({
+        userId: user._id,
+        token: crypto.randomBytes(32).toString("hex"),
+      }).save();
+    }
+
+    const link = `${process.env.BASE_URL}/password-reset/${user._id}/${token.token}`;
+    console.log(link, "link");
+    
+    sendEmail(user.email, "Password reset", link, next);
+
+  } catch (error) {
+    next(error);
+  }
+};
 
 //1- confirm password not done
 //2- reset password not done
