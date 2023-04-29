@@ -18,7 +18,7 @@ export const createBlog = async (req, res, next) => {
 
 export const getAllBlogs = async (req, res, next) => {
   try {
-    let searchData = req.query.search;
+    let searchData = req.query.search 
     let sortLikes = Number(req.query.likes);
     let sortViews = Number(req.query.views);
     let sortData = Number(req.query.sort) || -1;
@@ -160,7 +160,7 @@ export const deleteBlog = async (req, res, next) => {
 };
 
 // Create comment
-export const createComment = async (req, res, next) => {
+export const createComment = async (req, res, next) => {2
   try {
     req.body.comment.userId = req.user._id;
 

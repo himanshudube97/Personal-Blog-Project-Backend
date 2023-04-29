@@ -6,7 +6,7 @@ import { isAuthenticatedUser } from "../middleware/auth.js";
 
 
 router.route("/newBlog").post(isAuthenticatedUser,createBlog);
-router.route("/getAllBlogs").post(getAllBlogs);
+router.route("/getAllBlogs").get(getAllBlogs);
 router.route("/getSingleBlog/:id").get(isAuthenticatedUser,getSingleBlog);
 router.route("/updateBlog").post(isAuthenticatedUser, updateBlog);
 router.route("/deleteBlog").post(isAuthenticatedUser, deleteBlog);
