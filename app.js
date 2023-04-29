@@ -19,7 +19,7 @@ app.use("/api/v1", blog );
 app.use("/api/v1", user);
 
 // app.get("/h", async(req, res)=>{
-//     let result = await Blog.updateMany({likes:[]})
+//     let result = await Blog.updateMany({noOfLikes: 0})
 //     res.json({
 //         result
 //     })

@@ -11,6 +11,7 @@ const blogSchema = new mongoose.Schema({
     likes: {type: Array, default: []},
     noOfShares: {type: Number, default: 0},
     noOfViews: {type: Number, default: 0},
+    noOfLikes: {type: Number, default:0},
     comments: [{
         userId: {type: mongoose.Schema.Types.ObjectId, ref: "User"},
         comment: {type: String}

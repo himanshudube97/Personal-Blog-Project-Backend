@@ -18,7 +18,68 @@ export const createBlog = async (req, res, next) => {
 
 export const getAllBlogs = async (req, res, next) => {
   try {
-    let result = await Blog.find({ isDeleted: false });
+    let searchData = req.query.search;
+    let sortLikes = Number(req.query.likes);
+    let sortViews = Number(req.query.views);
+    let sortData = Number(req.query.sort) || -1;
+    let pageNum = Number(req.query.page) || 1;
+
+    console.log(req.query, "query");
+
+    // let sortDataQuery = {
+    //   createdAt: sortData,
+    // };
+
+    // if (sortLikes) {
+    //   sortDataQuery = { noOfLikes: sortLikes, ...sortDataQuery } ;
+    // } else if (sortViews) {
+    //   sortDataQuery = { noOfViews: sortViews, ...sortDataQuery };
+    // }
+
+    const sortDataQuery = {
+      ...(sortLikes ? { noOfLikes: sortLikes } : {}),
+      ...(sortViews ? { noOfViews: sortViews } : {}),
+      createdAt: sortData,
+    };
+    
+    console.log(sortDataQuery, "sorquer");
+
+    let searchQuery = [
+      {
+        title: { $regex: searchData, $options: "i" },
+      },
+      {
+        authorName: { $regex: searchData, $options: "i" },
+      },
+      {
+        description: { $regex: searchData, $options: "i" },
+      },
+    ];
+    console.log(searchQuery, "query");
+
+    let query = {
+      isDeleted: false,
+      $or: searchQuery,
+    };
+
+    let result = await Blog.aggregate([
+      { $match: query },
+      { $sort: sortDataQuery },
+      {
+        $facet: {
+          metadata: [
+            { $count: "totalBlogs" },
+            {
+              $addFields: {
+                current_page: pageNum,
+                total_page: { $ceil: { $divide: ["$totalBlogs", 5] } },
+              },
+            },
+          ],
+          data: [{ $skip: (pageNum - 1) * 5 }, { $limit: 10 }],
+        },
+      },
+    ]);
 
     res.status(200).json({
       success: true,
@@ -30,7 +91,6 @@ export const getAllBlogs = async (req, res, next) => {
 };
 
 export const getSingleBlog = async (req, res, next) => {
-
   try {
     let blogId = req.params.id;
     let result = await Blog.findOneAndUpdate(
@@ -119,7 +179,7 @@ export const createComment = async (req, res, next) => {
       : (commentsArray[indexOfComment] = req.body.comment);
 
     let result = await Blog.findOneAndUpdate(
-      { _id: req.body.blogId ,isDeleted: false},
+      { _id: req.body.blogId, isDeleted: false },
       { comments: commentsArray },
       { new: true }
     );
@@ -160,7 +220,7 @@ export const deletecomment = async (req, res, next) => {
 export const like_dislike_blog = async (req, res, next) => {
   try {
     req.body.userId = req.user._id;
-    const blog = await Blog.findOne({ _id: req.body.blogId , isDeleted: false});
+    const blog = await Blog.findOne({ _id: req.body.blogId, isDeleted: false });
 
     let likesArray = [...blog.likes];
 
@@ -172,9 +232,11 @@ export const like_dislike_blog = async (req, res, next) => {
       ? likesArray.push(req.body.userId)
       : likesArray.splice(likeIndex, 1);
 
+    let noOfLikes = likesArray.length;
+
     let result = await Blog.findOneAndUpdate(
-      { _id: req.body.blogId , isDeleted: false},
-      { likes: likesArray },
+      { _id: req.body.blogId, isDeleted: false },
+      { likes: likesArray, noOfLikes: noOfLikes },
       { new: true }
     );
     if (!result) return;
