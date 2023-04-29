@@ -3,10 +3,13 @@ import {errorMiddleware}  from "./middleware/errorMiddleware.js";
 import cookieParser from "cookie-parser";
 import Blog from "./models/blogModel.js";
 import mongoose from "mongoose";
+import cors from "cors";
+
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors());
 
 
 import blog from "./routes.js/blogRoutes.js";

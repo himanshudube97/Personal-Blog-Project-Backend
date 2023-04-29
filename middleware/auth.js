@@ -8,9 +8,9 @@ export const isAuthenticatedUser = async (req, res, next) => {
   if (!token) return next(new Errorhandler("invalid token", 400));
 
   const decodedData = jwt.verify(token, process.env.JWT_SECRET_KEY); //here decodedDAta contains the userinfo, jo humne payload main bheji thi.
-
+  console.log(decodedData, "dta")
   let user = await User.findById(decodedData.id, "name email role _id");
-
+  console.log(user,"user")
   req.user = user;
   next();
 };

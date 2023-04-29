@@ -5,10 +5,14 @@ import jwt from "jsonwebtoken";
 
 export const createUser = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, confirmPassword } = req.body;
+
     let user = await User.findOne({ email: email, isDeleted: false });
 
     if (user) return next(new Errorhandler("User already exists", 400));
+
+    if (password !== confirmPassword)
+      return next(new Errorhandler("Password didnt match", 400));
 
     let hashedPassword = await bcrypt.hash(password, 10);
     console.log(hashedPassword, "hash");
@@ -50,7 +54,7 @@ export const loginUser = async (req, res, next) => {
       id: user._id,
       name: user.name,
       role: user.role,
-      email: user.email
+      email: user.email,
     };
     const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
       expiresIn: process.env.JWT_KEY_EXPIRE,
@@ -70,7 +74,42 @@ export const loginUser = async (req, res, next) => {
 };
 
 export const logOut = async (req, res, next) => {
- try {
+  try {
+    res.cookie("token", "", {
+      expire: new Date(Date.now()),
+      httpOnly: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Logged Out successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changePassword = async (req, res, next) => {
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword)
+    return next(new Errorhandler("fill fields", 400));
+
+  let user = await User.findOne({ _id: req.user._id }).select("+password");
+
+  const comparePassword = await bcrypt.compare(oldPassword, user.password);
+
+  if (!comparePassword)
+    return next(new Errorhandler("Password dint match", 400));
+
+  let hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  let result = await User.findOneAndUpdate(
+    { _id: req.user._id },
+    { password: hashedPassword },
+    { new: true }
+  );
+
   res.cookie("token", "", {
     expire: new Date(Date.now()),
     httpOnly: true,
@@ -78,12 +117,14 @@ export const logOut = async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message: "Logged Out successfully",
+    message: "password Changed and Logout user",
+    result,
   });
- } catch (error) {
-  next(error);
- }
 };
+
+export const forgetPassword = async (req, res, next)=>{
+  
+}
 
 //1- confirm password not done
 //2- reset password not done

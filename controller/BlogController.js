@@ -30,9 +30,14 @@ export const getAllBlogs = async (req, res, next) => {
 };
 
 export const getSingleBlog = async (req, res, next) => {
+
   try {
     let blogId = req.params.id;
-    let result = await Blog.findOne({ _id: blogId, isDeleted: false });
+    let result = await Blog.findOneAndUpdate(
+      { _id: blogId, isDeleted: false },
+      { $inc: { noOfViews: 1 } },
+      { new: true }
+    );
 
     if (!result) return next(new Errorhandler("No Result found", 400));
 
@@ -94,12 +99,12 @@ export const deleteBlog = async (req, res, next) => {
   }
 };
 
-// like dislike comment-
+// Create comment
 export const createComment = async (req, res, next) => {
   try {
     req.body.comment.userId = req.user._id;
 
-    let blog = await Blog.findOne({ _id: req.body.blogId });
+    let blog = await Blog.findOne({ _id: req.body.blogId, isDeleted: false });
 
     if (!blog) return next(new Errorhandler("Invalid id", 404));
 
@@ -108,14 +113,13 @@ export const createComment = async (req, res, next) => {
     let indexOfComment = commentsArray.findIndex((val) => {
       return val.userId.toString() === req.user._id.toString();
     });
-    console.log(indexOfComment);
 
     indexOfComment === -1
       ? commentsArray.push(req.body.comment)
       : (commentsArray[indexOfComment] = req.body.comment);
 
     let result = await Blog.findOneAndUpdate(
-      { _id: req.body.blogId },
+      { _id: req.body.blogId ,isDeleted: false},
       { comments: commentsArray },
       { new: true }
     );
@@ -129,10 +133,12 @@ export const createComment = async (req, res, next) => {
   }
 };
 
+//delete comment->
+
 export const deletecomment = async (req, res, next) => {
   try {
     let result = await Blog.updateOne(
-      { _id: req.body.blogId },
+      { _id: req.body.blogId, isDeleted: false },
       { $pull: { comments: { userId: req.user._id } } }
     );
     console.log(result, "res");
@@ -144,5 +150,63 @@ export const deletecomment = async (req, res, next) => {
       success: true,
       result,
     });
-  } catch (error) {}
+  } catch (error) {
+    next(error);
+  }
 };
+
+//like blog->
+
+export const like_dislike_blog = async (req, res, next) => {
+  try {
+    req.body.userId = req.user._id;
+    const blog = await Blog.findOne({ _id: req.body.blogId , isDeleted: false});
+
+    let likesArray = [...blog.likes];
+
+    const likeIndex = likesArray.findIndex((val) => {
+      return val.toString() === req.body.userId.toString();
+    });
+
+    likeIndex === -1
+      ? likesArray.push(req.body.userId)
+      : likesArray.splice(likeIndex, 1);
+
+    let result = await Blog.findOneAndUpdate(
+      { _id: req.body.blogId , isDeleted: false},
+      { likes: likesArray },
+      { new: true }
+    );
+    if (!result) return;
+
+    res.status(200).json({
+      success: true,
+      result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// export const optimizedLikeAndUnlike = async (req, res, next) => {
+//   console.log(req.body);
+//   console.log(req.user._id);
+//   try {
+//     let updateQuery = {
+//       like: { $addToSet: { likes: req.user._id } },
+//       unlike: { $pull: { likes: req.user._id } },
+//     };
+
+//     let result = await Blog.findOneAndUpdate(
+//       { _id: req.body.blogId },
+//       updateQuery[req.body.likeAction],
+//       { new: true }
+//     );
+//     console.log(result, "res");
+//     if (!result) return next(new Errorhandler("error is thrown", 400));
+
+//     res.status(200).json({ success: true, result });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
