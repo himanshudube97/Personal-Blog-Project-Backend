@@ -63,12 +63,10 @@ export const loginUser = async (req, res, next) => {
       expiresIn: process.env.JWT_KEY_EXPIRE,
     });
 
-    const options = {
-      expire: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      httpOnly: true,
-    };
-    res.status(200).cookie("token", token, options).json({
+    res.status(200).json({
       success: true,
+      statusCode: 200,
+      token: token,
       user,
     });
   } catch (error) {
