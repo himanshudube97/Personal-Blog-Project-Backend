@@ -6,7 +6,8 @@ import { sendEmail } from "../utils/forgetPassword.js";
 import Token from "../models/tokenModel.js";
 import crypto from "crypto";
 
-export const createUser = async (req, res, next) => {
+export const 
+createUser = async (req, res, next) => {
   try {
     const { name, email, password, confirmPassword } = req.body;
 
@@ -25,6 +26,7 @@ export const createUser = async (req, res, next) => {
       email: email,
       password: hashedPassword,
     });
+    console.log(result, "result")
 
     res.status(200).json({
       success: true,
@@ -66,7 +68,9 @@ export const loginUser = async (req, res, next) => {
     const options = {
       expire: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       httpOnly: true,
+      sameSite: 'none',
     };
+    console.log(user, "user");
     res.status(200).cookie("token", token, options).json({
       success: true,
       user,

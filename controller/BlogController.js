@@ -2,8 +2,9 @@ import Blog from "../models/blogModel.js";
 import Errorhandler from "../utils/errorhandler.js";
 
 export const createBlog = async (req, res, next) => {
-  req.body.userId = req.user._id;
-  req.body.createdBy = req.user.role;
+  console.log(req.body, "req,");
+  // req.body.userId = req.user._id;
+  // req.body.createdBy = req.user.role;
   try {
     let result = await Blog.create(req.body);
 

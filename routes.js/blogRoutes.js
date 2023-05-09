@@ -5,9 +5,9 @@ import { createBlog, createComment, deleteBlog, deletecomment, getAllBlogs, getS
 import { isAuthenticatedUser } from "../middleware/auth.js";
 
 
-router.route("/newBlog").post(isAuthenticatedUser,createBlog);
+router.route("/newBlog").post(createBlog);
 router.route("/getAllBlogs").get(getAllBlogs);
-router.route("/getSingleBlog/:id").get(isAuthenticatedUser,getSingleBlog);
+router.route("/getSingleBlog/:id").get(getSingleBlog);
 router.route("/updateBlog").post(isAuthenticatedUser, updateBlog);
 router.route("/deleteBlog").post(isAuthenticatedUser, deleteBlog);
 router.route("/comment").post(isAuthenticatedUser, createComment);
