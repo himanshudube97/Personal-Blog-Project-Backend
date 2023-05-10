@@ -123,6 +123,18 @@ export const changePassword = async (req, res, next) => {
   });
 };
 
+export const getUserDetails = async(req, res, next) =>{
+  try {
+    const user = await User.findById(req.user._id)
+    res.status(200).json({
+      success: true,
+      user
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
 export const forgetPassword = async (req, res, next) => {
   try {
     const user = await User.findOne({ _id: req.user._id });
